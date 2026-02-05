@@ -1,7 +1,7 @@
 // Controlador do Cardápio
 // Este arquivo é como o "Chef de Cozinha" que mostra o menu aos clientes
 
-const { cardapio } = require('../services/database');
+const { cardapio } = require('../services/database_mock.js');
 
 // Função que retorna todo o cardápio
 // Quando o cliente pede para ver o menu, essa função é executada

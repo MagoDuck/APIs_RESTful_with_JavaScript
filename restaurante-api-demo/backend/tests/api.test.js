@@ -5,7 +5,7 @@
 
 const request = require('supertest');
 const app = require('../app'); // Importa sua aplicação Express
-const { resetComandas } = require('../src/services/database'); // Importa função para limpar dados
+const { resetComandas } = require('../src/services/database_mock.js'); // Importa função para limpar dados
 
 // HOOK GLOBAL
 // beforeAll pode ser usado para subir banco, etc.

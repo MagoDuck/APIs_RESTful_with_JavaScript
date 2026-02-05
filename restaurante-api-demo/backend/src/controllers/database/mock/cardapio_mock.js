@@ -18,26 +18,14 @@ const cardapio = [
   { id: 13, nome: 'Cachorro-quente', preco: 35.00, descricao: 'Pão, salsicha, purê de batata, batata palha, molho de carne' },
   { id: 14, nome: 'Pizza de calabresa', preco: 40.00, descricao: 'Pizza com calabresa' },
   { id: 15, nome: 'Fanta', preco: 7.00, descricao: 'Lata 350ml' },
-  { id: 16, nome: 'Brisadeiro', preco: 9.00, descricao: "Feito com chocolate de primeira" },
+  { id: 16, nome: 'Brigadeiro', preco: 9.00, descricao: "Feito com chocolate de primeira" },
   { id: 17, nome: 'Feijoada', preco: 120.00, descricao: 'Feijão preto, carne, porção de arroz, vinagrete, orelha de porco' },
   { id: 18, nome: 'Salada de salmão', preco: 40.00, descricao: 'Tem salmão' },
   { id: 19, nome: 'Guaraná Jesus', preco: 12.00, descricao: 'Lata 350ml, beba e seja abençoado' },
-  { id: 20, nome: 'Maconha', preco: 30.00, descricao: "Divertida" }
+  { id: 20, nome: 'Macarrão com Queijo', preco: 30.00, descricao: "Divertida" }
 ];
-
-// Array que armazenará as comandas (pedidos) dos clientes
-// Inicialmente vazio, será preenchido quando clientes fizerem pedidos
-const comandas = [];
-
-// Função para resetar o array de comandas (útil para testes)
-// Remove todas as comandas e reseta o array para vazio
-const resetComandas = () => {
-  comandas.length = 0; // Limpa o array sem criar uma nova referência
-};
 
 // Exportamos os arrays e a função de reset para serem usados em outros arquivos
 module.exports = {
-  cardapio,
-  comandas,
-  resetComandas
+  cardapio
 };
