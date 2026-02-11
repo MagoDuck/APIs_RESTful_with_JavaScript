@@ -11,7 +11,7 @@ const api = axios.create({
 export const getCardapio = () => {
   console.log('🍽️ Front-end: "Garçom, me traga o cardápio!"');
   return api.get('/cardapio'); // Faz o GET para /api/cardapio
-
+};
 
 // Função para buscar um item específico do cardápio (por ID)
 export const getCardapioItem = (id) => {
