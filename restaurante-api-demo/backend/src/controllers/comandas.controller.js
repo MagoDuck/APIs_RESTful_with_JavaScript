@@ -1,146 +1,85 @@
-// Controlador de Comandas (Pedidos)
-// Este arquivo é como o "Chef de Pedidos" que recebe e gerencia os pedidos dos clientes
+// Importamos o pool de conexão que você criou no db.js
+const db = require('../services/database_connection'); 
 
-const { comandas } = require('../services/database_mock.js');
-
-// Função que retorna todas as comandas (pedidos) registradas
-const getComandas = (req, res) => {
+// 1. LISTAR COMANDAS (GET)
+const getComandas = async (req, res) => {
   try {
+    // Usamos SQL para buscar no TiDB
+    const [rows] = await db.query('SELECT * FROM comandas');
+    
     res.status(200).json({
       sucesso: true,
       mensagem: 'Comandas recuperadas com sucesso',
-      quantidade: comandas.length,
-      dados: comandas
+      quantidade: rows.length,
+      dados: rows
     });
   } catch (error) {
     res.status(500).json({
       sucesso: false,
-      mensagem: 'Erro ao buscar comandas',
+      mensagem: 'Erro ao buscar no banco de dados',
       erro: error.message
     });
   }
 };
 
-// Função que cria uma nova comanda (pedido)
-// Recebe os dados do pedido do cliente via req.body
-const createComanda = (req, res) => {
+// 2. CRIAR COMANDA (POST)
+const createComanda = async (req, res) => {
   try {
-    // Extrai os dados enviados pelo cliente
     const { mesa, itens, total } = req.body;
+    
+    // O TiDB gera o ID sozinho se a tabela tiver AUTO_INCREMENT
+    // Como 'itens' costuma ser um array/objeto, salvamos como String JSON
+    const sql = 'INSERT INTO comandas (mesa, itens, total, status) VALUES (?, ?, ?, ?)';
+    const [result] = await db.query(sql, [mesa, JSON.stringify(itens), total, 'pendente']);
 
-    // total = total * 1.10;
-
-    // Cria um novo objeto de comanda
-    const novaComanda = {
-      id: comandas.length + 1, // ID automático baseado no tamanho do array
-      mesa,
-      itens,
-      total,
-      status: 'pendente',
-      dataPedido: new Date().toISOString()
-    };
-
-    // Adiciona a nova comanda ao array
-    comandas.push(novaComanda);
-
-    // Retorna a comanda criada com status 201 (Created)
     res.status(201).json({
       sucesso: true,
-      mensagem: 'Comanda criada com sucesso',
-      dados: novaComanda
+      mensagem: 'Comanda criada no TiDB!',
+      dados: { id: result.insertId, mesa, itens, total, status: 'pendente' }
     });
   } catch (error) {
     res.status(500).json({
       sucesso: false,
-      mensagem: 'Erro ao criar comanda',
+      mensagem: 'Erro ao salvar no banco',
       erro: error.message
     });
   }
 };
 
-// Função para atualizar o status de uma comanda (PATCH)
-// Permite mudar o status de um pedido (ex: pendente → Em Preparo → Pronto)
-const updateComandaStatus = (req, res) => {
+// 3. ATUALIZAR STATUS (PATCH)
+const updateComandaStatus = async (req, res) => {
   try {
-    const { id } = req.params; // Pega o ID da URL
-    const { status } = req.body; // Pega o novo status do corpo da requisição
+    const { id } = req.params;
+    const { status } = req.body;
 
-    // Validação: verifica se o status foi enviado
-    if (!status) {
-      return res.status(400).json({
-        sucesso: false,
-        mensagem: 'Status é obrigatório para atualizar a comanda'
-      });
+    if (!status) return res.status(400).json({ mensagem: 'Status é obrigatório' });
+
+    const [result] = await db.query('UPDATE comandas SET status = ? WHERE id = ?', [status, id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ sucesso: false, mensagem: 'Comanda não encontrada' });
     }
 
-    // Encontra o índice da comanda no array
-    // Usamos == (comparação fraca) para permitir '1' == 1
-    const comandaIndex = comandas.findIndex(c => c.id == id);
-
-    // Se não encontrar (índice -1), retorna 404
-    if (comandaIndex === -1) {
-      return res.status(404).json({
-        sucesso: false,
-        mensagem: 'Comanda não encontrada.'
-      });
-    }
-
-    // Atualiza o status da comanda encontrada
-    comandas[comandaIndex].status = status;
-
-    // Retorna a comanda inteira atualizada com status 200 (OK)
-    return res.status(200).json(comandas[comandaIndex]);
-
+    res.status(200).json({ sucesso: true, mensagem: 'Status atualizado!' });
   } catch (error) {
-    return res.status(500).json({
-      sucesso: false,
-      mensagem: 'Erro ao atualizar comanda',
-      erro: error.message
-    });
+    res.status(500).json({ sucesso: false, erro: error.message });
   }
 };
 
-// Função para deletar uma comanda (DELETE)
-// Remove um pedido do sistema (ex: cancelamento, limpeza de pedidos antigos)
-const deleteComanda = (req, res) => {
+// 4. DELETAR COMANDA (DELETE)
+const deleteComanda = async (req, res) => {
   try {
-    const { id } = req.params; // Pega o ID da URL
+    const { id } = req.params;
+    const [result] = await db.query('DELETE FROM comandas WHERE id = ?', [id]);
 
-    // Encontra o índice da comanda no array
-    // Usamos == (comparação fraca) para permitir '1' == 1
-    const comandaIndex = comandas.findIndex(c => c.id == id);
-
-    // Se não encontrar (índice -1), retorna 404
-    if (comandaIndex === -1) {
-      return res.status(404).json({
-        sucesso: false,
-        mensagem: 'Comanda não encontrada.'
-      });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ sucesso: false, mensagem: 'Comanda não encontrada' });
     }
 
-    // Remove a comanda do array usando splice
-    // splice(índice, quantosRemover) - remove 1 elemento no índice encontrado
-    comandas.splice(comandaIndex, 1);
-
-    // Retorna sucesso com status 200 (OK)
-    return res.status(200).json({
-      sucesso: true,
-      mensagem: 'Comanda deletada com sucesso'
-    });
-
+    res.status(200).json({ sucesso: true, mensagem: 'Comanda removida com sucesso' });
   } catch (error) {
-    return res.status(500).json({
-      sucesso: false,
-      mensagem: 'Erro ao deletar comanda',
-      erro: error.message
-    });
+    res.status(500).json({ sucesso: false, erro: error.message });
   }
 };
 
-// Exporta as funções para serem usadas nas rotas
-module.exports = {
-  getComandas,
-  createComanda,
-  updateComandaStatus,
-  deleteComanda 
-};
+module.exports = { getComandas, createComanda, updateComandaStatus, deleteComanda };

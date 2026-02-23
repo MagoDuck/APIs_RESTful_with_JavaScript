@@ -27,7 +27,7 @@ export const createComanda = (comanda) => {
 };
 
 // Função para buscar todas as comandas
-export const getComandas = () => {
+export const ListarComandas = () => {
   console.log('📋 Front-end: "Garçom, quais são os pedidos em aberto?"');
   return api.get('/comandas');
 };
