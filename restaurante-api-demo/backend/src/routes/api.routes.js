@@ -1,34 +1,29 @@
 // Arquivo de Rotas da API - CORRIGIDO
-const express = require('express');
-const router = express.Router();
+const express = require('express'); // ✅ APENAS UMA VEZ!
+const router = express.Router(); // ✅ Cria o router AQUI, no início
 
 // Importa os controladores
 const cardapioController = require('../controllers/cardapio.controller');
-const comandasController = require('../controllers/comandas.controller');
+const comandaController = require('../controllers/comandas.controller'); // ✅ Nome corrigido
 
 // ========== ROTAS DO CARDÁPIO ==========
-
 // GET /api/cardapio - Retorna todo o cardápio
 router.get('/cardapio', cardapioController.listarCardapio);
 
-// Se você tiver a função getCardapioItem no controller, descomente abaixo:
-// router.get('/cardapio/:id', cardapioController.getCardapioItem);
+// GET /api/cardapio/:id - Retorna um item específico
+router.get('/cardapio/:id', cardapioController.getCardapioItem);
 
+// ========== ROTAS DE COMANDAS ==========
+// GET /api/comandas - Lista todas as comandas
+router.get('/comandas', comandaController.getComandas);
 
-// ========== ROTAS DAS COMANDAS ==========
+// POST /api/comandas - Cria nova comanda
+router.post('/comandas', comandaController.createComanda);
 
-// GET /api/comandas - Retorna todas as comandas
-router.get('/comandas', comandasController.getComandas);
+// PATCH /api/comandas/:id - Atualiza status
+router.patch('/comandas/:id', comandaController.updateComandaStatus);
 
-// POST /api/comandas - Cria uma nova comanda
-router.post('/comandas', comandasController.createComanda);
+// DELETE /api/comandas/:id - Deleta comanda
+router.delete('/comandas/:id', comandaController.deleteComanda);
 
-// PATCH /api/comandas/:id - Atualiza o status de uma comanda (ex: pendente -> pronto)
-router.patch('/comandas/:id', comandasController.updateComandaStatus);
-
-// DELETE /api/comandas/:id - Deleta uma comanda
-router.delete('/comandas/:id', comandasController.deleteComanda);
-
-
-// Exporta o router para ser usado no server.js
-module.exports = router;
+module.exports = router; // ✅ Exporta o router

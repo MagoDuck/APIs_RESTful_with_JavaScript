@@ -1,28 +1,40 @@
-const { cardapio } = require("../mock/cardapio_mock"); // ajuste o caminho conforme sua pasta
+const { cardapio } = require("../mock/cardapio_mock");
 
 async function seedCardapio(pool) {
-  console.log("Populando cardapio...");
+  console.log("🍽️ Populando cardápio...");
+
+  if (!cardapio || !Array.isArray(cardapio) || cardapio.length === 0) {
+    console.error("❌ Dados do cardápio inválidos ou vazios!");
+    return;
+  }
 
   const conn = await pool.getConnection();
   try {
-    // Limpa a tabela antes de popular
+    // Opcional: Resetar AUTO_INCREMENT
     await conn.query("DELETE FROM cardapio");
+    await conn.query("ALTER TABLE cardapio AUTO_INCREMENT = 1");
 
     for (const item of cardapio) {
-  await conn.query(
-    "INSERT INTO cardapio (id, nome, preco, descricao) VALUES (?, ?, ?, ?)",
-    [item.id, item.nome, item.preco, item.descricao]
-  );
-}
+      // Validação básica dos dados
+      if (!item.nome || !item.preco) {
+        console.warn(`⚠️ Item inválido ignorado:`, item);
+        continue;
+      }
 
+      await conn.query(
+        "INSERT INTO cardapio (nome, preco, descricao) VALUES (?, ?, ?)",
+        [item.nome, item.preco, item.descricao || '']
+      );
+      // ✅ Removido o 'id' do INSERT - deixe o AUTO_INCREMENT gerar
+    }
 
-    console.log("Tabela cardapio populada!");
+    const [result] = await conn.query("SELECT COUNT(*) as total FROM cardapio");
+    console.log(`✅ Cardápio populado! Total: ${result[0].total} itens`);
   } catch (err) {
-    console.error("Erro ao popular tabela cardapio:", err);
+    console.error("❌ Erro ao popular tabela cardapio:", err);
   } finally {
-    conn.release();
+    conn.release(); // ✅ ESSENCIAL!
   }
 }
 
-// Exporta a função para o orquestrador
 module.exports = seedCardapio;
