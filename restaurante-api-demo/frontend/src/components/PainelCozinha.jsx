@@ -22,6 +22,7 @@ export function PainelCozinha({ refreshTrigger }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Busca as comandas
   useEffect(() => {
     const fetchComandas = async () => {
       setLoading(true);
@@ -29,11 +30,15 @@ export function PainelCozinha({ refreshTrigger }) {
         const response = await getComandas();
         console.log('✅ Front-end: Pedidos recebidos!', response.data);
         
-        // Converte os status do back-end para o formato de exibição
+        // Extrai a lista de pedidos (pode vir em dados ou direto)
         const listaPedidos = response.data.dados || response.data;
+        
+        // Formata os pedidos para exibição
         const comandasFormatadas = listaPedidos.map(comanda => ({
           ...comanda,
-          statusDisplay: statusDisplayMap[comanda.status] || comanda.status
+          statusDisplay: statusDisplayMap[comanda.status] || comanda.status,
+          // Garante que itens é um array
+          itens: Array.isArray(comanda.itens) ? comanda.itens : []
         }));
         
         setComandas([...comandasFormatadas].reverse());
@@ -62,22 +67,39 @@ export function PainelCozinha({ refreshTrigger }) {
       // Chama a API com o status correto
       const response = await updateComandaStatus(id, statusBackend);
       
+      // ✅ VERIFICA ONDE ESTÃO OS DADOS NA RESPOSTA
+      let comandaAtualizada;
+      
+      if (response.data.dados) {
+        // Se a resposta veio com { sucesso, dados }
+        comandaAtualizada = response.data.dados;
+      } else if (response.data) {
+        // Se a resposta veio direto
+        comandaAtualizada = response.data;
+      } else {
+        console.error('Formato de resposta inválido:', response);
+        return;
+      }
+      
+      // Adiciona o statusDisplay para renderização
+      comandaAtualizada.statusDisplay = statusDisplayMap[comandaAtualizada.status] || comandaAtualizada.status;
+      
+      // Garante que itens é um array
+      comandaAtualizada.itens = Array.isArray(comandaAtualizada.itens) 
+        ? comandaAtualizada.itens 
+        : [];
+      
       // Atualiza o estado local
       setComandas((comandasAnteriores) =>
         comandasAnteriores.map((comanda) =>
-          comanda.id === id 
-            ? { 
-                ...response.data, 
-                statusDisplay: statusDisplayMap[response.data.status] 
-              } 
-            : comanda
+          comanda.id === id ? comandaAtualizada : comanda
         )
       );
       
-      console.log(`Status do Pedido #${id} atualizado para ${statusDisplay}`);
+      console.log(`✅ Status do Pedido #${id} atualizado para ${statusDisplay}`);
     
     } catch (err) {
-      console.error('Erro ao atualizar status:', err);
+      console.error('❌ Erro ao atualizar status:', err);
       alert('Falha ao atualizar o status do pedido.');
     }
   };
@@ -93,9 +115,9 @@ export function PainelCozinha({ refreshTrigger }) {
       setComandas((comandasAnteriores) =>
         comandasAnteriores.filter((c) => c.id !== id)
       );
-      console.log(`Pedido #${id} cancelado com sucesso!`);
+      console.log(`✅ Pedido #${id} cancelado com sucesso!`);
     } catch (err) {
-      console.error('Erro ao cancelar pedido:', err);
+      console.error('❌ Erro ao cancelar pedido:', err);
       alert('Falha ao cancelar o pedido.');
     }
   };
@@ -111,9 +133,9 @@ export function PainelCozinha({ refreshTrigger }) {
       setComandas((comandasAnteriores) =>
         comandasAnteriores.filter((c) => c.id !== id)
       );
-      console.log(`Pedido #${id} removido do painel!`);
+      console.log(`✅ Pedido #${id} removido do painel!`);
     } catch (err) {
-      console.error('Erro ao remover pedido:', err);
+      console.error('❌ Erro ao remover pedido:', err);
       alert('Falha ao remover o pedido.');
     }
   };
@@ -173,13 +195,13 @@ export function PainelCozinha({ refreshTrigger }) {
                 </span>
               </p>
               <p className="cozinha-itens">
-                📋 Itens: {comanda.itens.length} {comanda.itens.length === 1 ? 'item' : 'itens'}
+                📋 Itens: {comanda.itens?.length || 0} {(comanda.itens?.length || 0) === 1 ? 'item' : 'itens'}
               </p>
               <p className="cozinha-total">
-                <strong>💰 Total: R$ {comanda.total.toFixed(2)}</strong>
+                <strong>💰 Total: R$ {comanda.total?.toFixed(2) || '0.00'}</strong>
               </p>
               <p className="cozinha-data">
-                <small>🕐 {new Date(comanda.dataPedido).toLocaleString('pt-BR')}</small>
+                <small>🕐 {comanda.dataPedido ? new Date(comanda.dataPedido).toLocaleString('pt-BR') : 'Data não disponível'}</small>
               </p>
               
               <div className="botoes-acao">
