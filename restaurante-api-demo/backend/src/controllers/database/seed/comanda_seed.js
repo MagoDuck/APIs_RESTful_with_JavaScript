@@ -16,7 +16,9 @@ async function seedComandas(pool) {
     console.log("Tabela comandas populada!");
   } catch (err) {
     console.error("Erro ao popular tabela comandas:", err);
-  } 
+  } finally {
+    conn.release(); // ✅ IMPORTANTE: Sempre liberar a conexão!
+  }
 }
 
 module.exports = seedComandas;

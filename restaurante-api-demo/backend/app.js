@@ -25,7 +25,9 @@ app.get('/', (req, res) => {
     endpoints: {
       cardapio: 'GET /api/cardapio',
       listarComandas: 'GET /api/comandas',
-      criarComanda: 'POST /api/comandas'
+      criarComanda: 'POST /api/comandas',
+      atualizarComanda: 'PATCH /api/comandas/:id',
+      deletarComanda: 'DELETE /api/comandas/:id'
     }
   });
 });
@@ -33,6 +35,25 @@ app.get('/', (req, res) => {
 // ========== ROTAS DA API ==========
 // Todas as rotas começarão com /api
 app.use('/api', apiRoutes);
+
+// ========== TRATAMENTO DE ERROS ==========
+// Middleware para rotas não encontradas (404)
+app.use((req, res) => {
+  res.status(404).json({
+    sucesso: false,
+    mensagem: 'Rota não encontrada'
+  });
+});
+
+// Middleware para erros gerais (500)
+app.use((err, req, res, next) => {
+  console.error('Erro no servidor:', err);
+  res.status(500).json({
+    sucesso: false,
+    mensagem: 'Erro interno no servidor',
+    erro: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
 
 // Exporta o app para ser usado pelo server.js e pelos testes
 module.exports = app;
